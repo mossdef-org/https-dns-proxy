@@ -25,7 +25,7 @@ define Package/https-dns-proxy
 	SECTION:=net
 	CATEGORY:=Network
 	TITLE:=DNS Over HTTPS Proxy
-	URL:=https://github.com/stangri/https-dns-proxy/
+	URL:=https://github.com/mossdef-org/https-dns-proxy/
 	DEPENDS:= \
 		+libcares \
 		+libcurl \
