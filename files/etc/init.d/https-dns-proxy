@@ -266,6 +266,7 @@ start_instance() {
 		config_foreach dnsmasq_doh_server 'dnsmasq' 'add' "${listen_addr}" "${listen_port}"
 		config_foreach dnsmasq_instance_append_force_dns_port 'dnsmasq'
 	elif is_alnum "$dnsmasq_config_update"; then
+		config_load 'dhcp'
 		for i in $dnsmasq_config_update; do
 			dnsmasq_doh_server "@dnsmasq[$i]" 'add' "${listen_addr}" "${listen_port}" || \
 				dnsmasq_doh_server "${i}" 'add' "${listen_addr}" "${listen_port}"
@@ -409,13 +410,14 @@ restart() { reload "$@"; }
 
 dnsmasq_instance_append_force_dns_port() {
 	local cfg="$1" instance_port
-	[ -n "$(uci_get 'dhcp' "$cfg")" ] || return 1
+	[ "$(uci_get 'dhcp' "$cfg")" = "dnsmasq" ] || return 1
 	config_get instance_port "$cfg" 'port' '53'
 		str_contains_word "$force_dns_port" "$instance_port" || force_dns_port="${force_dns_port:+$force_dns_port }${instance_port}"
 }
 
 dnsmasq_doh_server() {
 	local cfg="$1" param="$2" address="${3:-127.0.0.1}" port="$4" i
+	[ "$(uci_get 'dhcp' "$cfg")" = "dnsmasq" ] || return 1
 	case "$param" in
 		add)
 			if [ -n "$force_dns" ]; then
@@ -446,7 +448,7 @@ dnsmasq_doh_server() {
 dhcp_backup() {
 	_dnsmasq_create_server_backup() {
 		local cfg="$1" i
-		[ -n "$(uci_get 'dhcp' "$cfg")" ] || return 1
+		[ "$(uci_get 'dhcp' "$cfg")" = "dnsmasq" ] || return 1
 	#	uci_remove 'dhcp' "$cfg" 'doh_server' # this removes outdated doh_server entries, but causes unnecessary dnsmasq restarts
 		if [ -z "$(uci_get 'dhcp' "$cfg" 'doh_backup_noresolv')" ]; then
 			if [ -z "$(uci_get 'dhcp' "$cfg" 'noresolv')" ]; then
@@ -472,7 +474,7 @@ dhcp_backup() {
 # shellcheck disable=SC2317
 	_dnsmasq_restore_server_backup() {
 		local cfg="$1" i
-		[ -n "$(uci_get 'dhcp' "$cfg")" ] || return 0
+		[ "$(uci_get 'dhcp' "$cfg")" = "dnsmasq" ] || return 0
 		if [ -n "$(uci_get 'dhcp' "$cfg" 'doh_backup_noresolv')" ]; then
 			if [ "$(uci_get 'dhcp' "$cfg" 'doh_backup_noresolv')" = "-1" ]; then
 				uci_remove 'dhcp' "$cfg" 'noresolv'
