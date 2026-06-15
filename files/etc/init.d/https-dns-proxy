@@ -91,7 +91,7 @@ is_port_listening() {
 is_resolver_working() { 
 	local heartbeat_domain heartbeat_sleep_timeout heartbeat_wait_timeout
 	config_load "$packageName"
-	config_get heartbeat_domain        'config' 'heartbeat_domain'        'heartbeat.melmac.ca'
+	config_get heartbeat_domain        'config' 'heartbeat_domain'        'heartbeat.mossdef.org'
 	config_get heartbeat_sleep_timeout 'config' 'heartbeat_sleep_timeout' '10'
 	config_get heartbeat_wait_timeout  'config' 'heartbeat_wait_timeout'  '30'
 	[ "$heartbeat_domain" = '-' ] && return 0
