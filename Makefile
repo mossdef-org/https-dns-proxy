@@ -59,6 +59,7 @@ define Package/https-dns-proxy/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults/
 	$(INSTALL_BIN) ./files/etc/uci-defaults/50-https-dns-proxy-migrate-options.sh $(1)/etc/uci-defaults/50-https-dns-proxy-migrate-options.sh
 	$(INSTALL_DIR) $(1)/usr/share/nftables.d/ruleset-post
+	$(INSTALL_DATA) ./files/usr/share/nftables.d/ruleset-post/.placeholder $(1)/usr/share/nftables.d/ruleset-post/.placeholder
 endef
 
 $(eval $(call BuildPackage,https-dns-proxy))
