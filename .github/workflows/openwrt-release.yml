@@ -33,6 +33,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # 24.10 (ipk, frozen — do not expand)
           - version: openwrt-24.10
             target: x86_64
           - version: openwrt-24.10
@@ -47,20 +48,77 @@ jobs:
             target: mips_24kc
           - version: openwrt-24.10
             target: mipsel_24kc
-          - version: openwrt-25.12
-            target: x86_64
+          # 25.12 (apk, all OpenWrt-supported arches)
           - version: openwrt-25.12
             target: aarch64_cortex-a53
           - version: openwrt-25.12
+            target: aarch64_cortex-a72
+          - version: openwrt-25.12
+            target: aarch64_cortex-a76
+          - version: openwrt-25.12
             target: aarch64_generic
+          - version: openwrt-25.12
+            target: arm_arm1176jzf-s_vfp
+          - version: openwrt-25.12
+            target: arm_arm926ej-s
+          - version: openwrt-25.12
+            target: arm_cortex-a15_neon-vfpv4
+          - version: openwrt-25.12
+            target: arm_cortex-a5_vfpv4
           - version: openwrt-25.12
             target: arm_cortex-a7
           - version: openwrt-25.12
+            target: arm_cortex-a7_neon-vfpv4
+          - version: openwrt-25.12
+            target: arm_cortex-a7_vfpv4
+          - version: openwrt-25.12
+            target: arm_cortex-a8_vfpv3
+          - version: openwrt-25.12
             target: arm_cortex-a9
+          - version: openwrt-25.12
+            target: arm_cortex-a9_neon
+          - version: openwrt-25.12
+            target: arm_cortex-a9_vfpv3-d16
+          - version: openwrt-25.12
+            target: arm_fa526
+          - version: openwrt-25.12
+            target: arm_xscale
+          - version: openwrt-25.12
+            target: armeb_xscale
+          - version: openwrt-25.12
+            target: i386_pentium-mmx
+          - version: openwrt-25.12
+            target: i386_pentium4
+          - version: openwrt-25.12
+            target: loongarch64_generic
+          - version: openwrt-25.12
+            target: mips64_mips64r2
+          - version: openwrt-25.12
+            target: mips64_octeonplus
+          - version: openwrt-25.12
+            target: mips64el_mips64r2
           - version: openwrt-25.12
             target: mips_24kc
           - version: openwrt-25.12
+            target: mips_mips32
+          - version: openwrt-25.12
             target: mipsel_24kc
+          - version: openwrt-25.12
+            target: mipsel_24kc_24kf
+          - version: openwrt-25.12
+            target: mipsel_74kc
+          - version: openwrt-25.12
+            target: mipsel_mips32
+          - version: openwrt-25.12
+            target: powerpc64_e5500
+          - version: openwrt-25.12
+            target: powerpc_464fp
+          - version: openwrt-25.12
+            target: powerpc_8548
+          - version: openwrt-25.12
+            target: riscv64_generic
+          - version: openwrt-25.12
+            target: x86_64
 
     steps:
       - name: 🧾 Checkout repo
@@ -156,6 +214,7 @@ jobs:
   release:
     name: Release ${{ github.repository }}
     needs: build
+    if: ${{ always() }}
     runs-on: ubuntu-latest
 
     steps:
