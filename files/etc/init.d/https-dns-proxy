@@ -460,8 +460,12 @@ service_triggers() {
 	fi
 }
 
-service_started() { { [ -n "$force_dns" ] || [ -n "$notrack_dns" ]; } && procd_set_config_changed firewall; }
-service_stopped() { { [ -n "$force_dns" ] || [ -n "$notrack_dns" ]; } && procd_set_config_changed firewall; }
+# These run for their side effect only (flag the firewall for reconfig). Force a
+# 0 return so a falsy test doesn't become the exit code of start/reload/restart —
+# force_dns/notrack_dns are empty in this scope, so without this restart exits 1
+# even on a successful start. See issue #11.
+service_started() { { [ -n "$force_dns" ] || [ -n "$notrack_dns" ]; } && procd_set_config_changed firewall; return 0; }
+service_stopped() { { [ -n "$force_dns" ] || [ -n "$notrack_dns" ]; } && procd_set_config_changed firewall; return 0; }
 restart() { reload "$@"; }
 
 dnsmasq_instance_append_force_dns_port() {

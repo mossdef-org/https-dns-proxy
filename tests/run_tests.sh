@@ -634,6 +634,18 @@ load_package_config
 assert_eq "load_package_config: canary disabled → canaryDomains empty" "" "$canaryDomains"
 assert_eq "load_package_config: force_dns=0 → unset" "" "$force_dns"
 
+printf "\n##\n## 9b: service_started/service_stopped exit code (issue #11)\n##\n\n"
+
+# These run only for the procd_set_config_changed side effect. When force_dns and
+# notrack_dns are both empty the guard test is false; without an explicit
+# 'return 0' the function's exit status (1) becomes the exit code of
+# start/reload/restart, so a successful restart wrongly reports failure.
+force_dns='' notrack_dns=''
+service_started; assert_rc "service_started returns 0 when force_dns/notrack_dns empty" 0 $?
+service_stopped; assert_rc "service_stopped returns 0 when force_dns/notrack_dns empty" 0 $?
+force_dns='1' notrack_dns=''
+service_started; assert_rc "service_started returns 0 when force_dns set" 0 $?
+
 printf "\n##\n## 10: notrack_nft (regression: missing nftables.d/ruleset-post dir)\n##\n\n"
 
 # Reset state — ensure parent dir does NOT exist (this is the apk-install

@@ -3,7 +3,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=https-dns-proxy
 PKG_VERSION:=2026.03.18
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 PKG_CPE_ID:=cpe:/a:mossdef:https-dns-proxy
 
 PKG_SOURCE_PROTO:=git
