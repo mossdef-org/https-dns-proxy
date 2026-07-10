@@ -223,14 +223,10 @@ append_boot() {
 	[ -z "$_loctmp" ] && return 0
 	IFS=" ,"
 	for i in $_loctmp; do
-		if { [ -z "$force_ipv6" ] && is_ipv4 "$i"; } || \
-			{ [ -n "$force_ipv6" ] && is_ipv6 "$i"; }; then
-			[ -z "$_newtmp" ] && _newtmp="$i" || _newtmp="${_newtmp},${i}"
-		fi
+		[ -z "$_newtmp" ] && _newtmp="$i" || _newtmp="${_newtmp},${i}"
 	done
 	IFS="$_old_ifs"
 	[ -n "$_newtmp" ] && xappend "$switch $_newtmp"
-	[ -z "$force_ipv6" ] && xappend '-4'
 }
 
 boot() {
