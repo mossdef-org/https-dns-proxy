@@ -8,7 +8,7 @@ PKG_CPE_ID:=cpe:/a:mossdef:https-dns-proxy
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/mossdef-org/https_dns_proxy/
-PKG_MIRROR_HASH:=345f14e0a05e032754cea440f5e8798c6896cf5bc7cc12b3c7ed1c8d34e4daad
+PKG_MIRROR_HASH:=566b70c2a60cfa5dcc716b9dd63929b5ac5d596f1f7c3e1b35934ce9c043eba8
 PKG_SOURCE_VERSION:=c029f8adbe1708983f1d1dead14ab1791db7489d
 
 PKG_MAINTAINER:=Stan Grishin <stangri@melmac.ca>
