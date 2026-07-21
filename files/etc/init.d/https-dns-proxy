@@ -11,9 +11,10 @@ USE_PROCD=1
 
 if type extra_command 1>/dev/null 2>&1; then
 	extra_command 'version' 'Show version information'
+	extra_command 'reset' 'Reset connections (send SIGUSR1) on network change'
 else
 # shellcheck disable=SC2034
-	EXTRA_COMMANDS='version'
+	EXTRA_COMMANDS='version reset'
 fi
 
 readonly PKG_VERSION='dev-test'
@@ -466,7 +467,7 @@ service_triggers() {
 		fi
 		output "Setting trigger${wan6:+s} for $wan ${wan6:+${wan6} }"
 		for i in $wan $wan6; do
-			procd_add_interface_trigger "interface.*" "$i" "/etc/init.d/${packageName}" reload 'on_interface_trigger' && output_ok || output_fail
+			procd_add_interface_trigger "interface.*" "$i" "/etc/init.d/${packageName}" reset 'on_interface_trigger' && output_ok || output_fail
 		done
 		output '\n'
 		procd_add_config_trigger "config.change" "$packageName" "/etc/init.d/${packageName}" reload 'on_config_change'
@@ -480,6 +481,24 @@ service_triggers() {
 service_started() { { [ -n "$force_dns" ] || [ -n "$notrack_dns" ]; } && procd_set_config_changed firewall; return 0; }
 service_stopped() { { [ -n "$force_dns" ] || [ -n "$notrack_dns" ]; } && procd_set_config_changed firewall; return 0; }
 restart() { reload "$@"; }
+
+# Network-change handler. Instead of a full daemon restart on every WAN flap,
+# ask procd to send SIGUSR1 to the running instances so they rebuild libcurl's
+# connection pool and re-resolve the resolver hostname in-process (upstream
+# issue #207). procd_send_signal resolves the signal name to the correct
+# per-arch number (it differs on MIPS) and '*' targets every instance of the
+# service. Falls back to a normal reload when procd has no instance to signal
+# (e.g. the service isn't running yet), so an early network event still starts it.
+reset() {
+	local param="$1"
+	output "Resetting $serviceName ${param:+${param} }"
+	if procd_send_signal "$packageName" '*' 'USR1'; then
+		output_okn
+	else
+		output_failn
+		reload "$param"
+	fi
+}
 
 dnsmasq_instance_append_force_dns_port() {
 	local cfg="$1" instance_port

@@ -699,6 +699,33 @@ service_stopped; assert_rc "service_stopped returns 0 when force_dns/notrack_dns
 force_dns='1' notrack_dns=''
 service_started; assert_rc "service_started returns 0 when force_dns set" 0 $?
 
+printf "\n##\n## 9c: reset (network-change SIGUSR1, issue #207)\n##\n\n"
+
+# reset should ask procd to signal running instances with SIGUSR1 (rebuilds
+# libcurl's connection pool in-process) instead of restarting the daemon, and
+# fall back to a normal reload when procd has nothing to signal so the service
+# still starts.
+__reset_signal_args="$TESTDIR/reset_signal_args"
+__reset_reload_called="$TESTDIR/reset_reload_called"
+: > "$__reset_signal_args"; : > "$__reset_reload_called"
+reload() { printf 'yes' > "$__reset_reload_called"; return 0; }
+
+# procd delivers the signal → no reload.
+procd_send_signal() { printf '%s' "$*" > "$__reset_signal_args"; return 0; }
+reset 'on_interface_trigger' >/dev/null 2>&1
+assert_rc "reset returns 0 when signal is delivered" 0 $?
+assert_eq "reset signals all instances with SIGUSR1" "https-dns-proxy * USR1" "$(cat "$__reset_signal_args")"
+assert_eq "reset does not reload when signal is delivered" "" "$(cat "$__reset_reload_called")"
+
+# procd cannot signal (e.g. service not running) → fall back to reload.
+: > "$__reset_signal_args"; : > "$__reset_reload_called"
+procd_send_signal() { return 1; }
+reset 'on_interface_trigger' >/dev/null 2>&1
+assert_rc "reset returns 0 on reload fallback" 0 $?
+assert_eq "reset falls back to reload when procd cannot signal" "yes" "$(cat "$__reset_reload_called")"
+
+unset -f procd_send_signal reload
+
 printf "\n##\n## 10: notrack_nft (regression: missing nftables.d/ruleset-post dir)\n##\n\n"
 
 # Reset state — ensure parent dir does NOT exist (this is the apk-install
