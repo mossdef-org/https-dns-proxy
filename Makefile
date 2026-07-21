@@ -2,14 +2,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=https-dns-proxy
-PKG_VERSION:=2026.05.06
+PKG_VERSION:=2026.07.21
 PKG_RELEASE:=1
 PKG_CPE_ID:=cpe:/a:mossdef:https-dns-proxy
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/aarond10/https_dns_proxy/
+PKG_SOURCE_URL:=https://github.com/mossdef-org/https_dns_proxy/
 PKG_MIRROR_HASH:=345f14e0a05e032754cea440f5e8798c6896cf5bc7cc12b3c7ed1c8d34e4daad
-PKG_SOURCE_VERSION:=0ba0525fa7c10115cc7c92e99621bfe484ae96e7
+PKG_SOURCE_VERSION:=c029f8adbe1708983f1d1dead14ab1791db7489d
 
 PKG_MAINTAINER:=Stan Grishin <stangri@melmac.ca>
 PKG_LICENSE:=MIT
