@@ -74,6 +74,14 @@ global_statistic_interval=
 global_log_limit=
 
 dnsmasq_restart() { /etc/init.d/dnsmasq restart >/dev/null 2>&1; }
+# Whether the package is allowed to modify /etc/config/dhcp at all. An empty
+# value or '-' opts out completely: no backup on start, no restore on stop.
+dnsmasq_config_update_enabled() {
+	case "$dnsmasq_config_update" in
+		''|'-') return 1;;
+	esac
+	return 0
+}
 is_alnum() { case "$1" in (*[![:alnum:]_\ @]*|"") return 1;; esac; }
 is_mac_address() { expr "$1" : '[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]$' >/dev/null; }
 is_integer() { case "$1" in ''|*[!0-9]*) return 1;; esac; [ "$1" -ge 1 ] && [ "$1" -le 65535 ] || return 1; return 0; }
@@ -584,24 +592,26 @@ dhcp_backup() {
 			uci_remove 'dhcp' "$cfg" 'doh_backup_server'
 		fi
 	}
-	local i
-	config_load 'dhcp'
+	local callback i
+	# Both create and restore must respect dnsmasq_config_update: restoring
+	# instances the package was never allowed to touch clobbers manually
+	# maintained 'list server' entries on stop/reboot. See issue #223.
+	dnsmasq_config_update_enabled || return 0
 	case "$1" in
-		create)
-			if [ "$dnsmasq_config_update" = "*" ]; then
-				config_foreach _dnsmasq_create_server_backup 'dnsmasq'
-			elif [ -n "$dnsmasq_config_update" ]; then
-				for i in $dnsmasq_config_update; do
-					if [ -n "$(uci_get 'dhcp' "@dnsmasq[$i]")" ]; then
-						_dnsmasq_create_server_backup "@dnsmasq[$i]"
-					elif [ -n "$(uci_get 'dhcp' "$i")" ]; then
-						_dnsmasq_create_server_backup "$i"
-					fi
-				done
-			fi
-			;;
-		restore)
-			config_foreach _dnsmasq_restore_server_backup 'dnsmasq'
-			;;
+		create)  callback='_dnsmasq_create_server_backup';;
+		restore) callback='_dnsmasq_restore_server_backup';;
+		*) return 0;;
 	esac
+	config_load 'dhcp'
+	if [ "$dnsmasq_config_update" = '*' ]; then
+		config_foreach "$callback" 'dnsmasq'
+	else
+		for i in $dnsmasq_config_update; do
+			if [ -n "$(uci_get 'dhcp' "@dnsmasq[$i]")" ]; then
+				"$callback" "@dnsmasq[$i]"
+			elif [ -n "$(uci_get 'dhcp' "$i")" ]; then
+				"$callback" "$i"
+			fi
+		done
+	fi
 }
