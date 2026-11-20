@@ -458,6 +458,37 @@ assert_rc "dhcp_backup restore: server 8.8.8.8 restored" 0 $?
 val="$(uci_get "dhcp" "cfg01" "doh_backup_server")"
 assert_eq "dhcp_backup restore: backup marker removed" "" "$val"
 
+# Test: no servers originally, then a second create without a restore
+# (reload or restart runs start_service again)
+rm -f "$__uci_store"/*
+uci_set "dhcp" "cfg01" ".type" "dnsmasq"
+uci_set "dhcp" "cfg01" "port" "53"
+
+dhcp_backup 'create'
+dnsmasq_doh_server "cfg01" 'add' '127.0.0.1' '5053'
+dhcp_backup 'create'
+dhcp_backup 'restore'
+
+val="$(uci_get "dhcp" "cfg01" "server")"
+assert_eq "dhcp_backup restore: no DoH server left after a second create" "" "$val"
+
+# Test: canary domains turned off between create and restore, with the
+# user's own canary entry in the original server list
+rm -f "$__uci_store"/*
+uci_set "dhcp" "cfg01" ".type" "dnsmasq"
+uci_set "dhcp" "cfg01" "server" "/use-application-dns.net/"
+force_dns="1"
+canaryDomains="mask.icloud.com use-application-dns.net"
+
+dhcp_backup 'create'
+dnsmasq_doh_server "cfg01" 'add' '127.0.0.1' '5053'
+canaryDomains=""
+dhcp_backup 'restore'
+force_dns=""
+
+val="$(uci_get "dhcp" "cfg01" "server")"
+assert_eq "dhcp_backup restore: canary entries removed after canary domains were turned off, user's entry kept" "/use-application-dns.net/" "$val"
+
 printf "\n##\n## 05: dhcp_backup with noresolv states\n##\n\n"
 
 # Test: noresolv was not set originally → backup stores -1
